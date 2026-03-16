@@ -134,7 +134,7 @@
             );
         };
 
-        const Header = ({ title, subtitle, showSearch = true, onMenuClick }) => {
+        const Header = ({ title, subtitle, showSearch = true, onMenuClick, searchValue, onSearchChange }) => {
             return (
                 <header class="flex flex-col gap-4 px-4 sm:px-8 py-4 sm:py-6 sticky top-0 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md z-30 shrink-0 border-b border-slate-200 dark:border-slate-800">
                     <div class="flex items-center justify-between gap-4">
@@ -157,7 +157,13 @@
                     {showSearch && (
                         <div class="relative block w-full z-40">
                             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-                            <input class="w-full pl-10 pr-4 py-2 rounded-lg border-slate-200 dark:border-slate-700 focus:ring-primary focus:border-primary bg-white dark:bg-slate-800" placeholder="Search..." type="text"/>
+                            <input 
+                                class="w-full pl-10 pr-4 py-2 rounded-lg border-slate-200 dark:border-slate-700 focus:ring-primary focus:border-primary bg-white dark:bg-slate-800" 
+                                placeholder="Search..." 
+                                type="text"
+                                value={searchValue}
+                                onChange={(e) => onSearchChange(e.target.value)}
+                            />
                         </div>
                     )}
                 </header>
@@ -251,6 +257,8 @@
         const BatchPage = ({ onMenuClick }) => {
             const [selectedBatch, setSelectedBatch] = useState(null);
             const [activeTab, setActiveTab] = useState("Overview");
+            const [searchQuery, setSearchQuery] = useState("");
+            const [statusFilter, setStatusFilter] = useState("All");
 
             const batches = [
                 { 
@@ -281,6 +289,29 @@
                         { title: "React Basics Quiz", type: "Quiz", score: "--", status: "Upcoming", due: "Oct 28" },
                         { title: "Form Validation Assignment", type: "Assignment", score: "8.5", status: "Graded", due: "Oct 20" },
                         { title: "Array Manipulation Exercise", type: "Programming Exercise", score: "--", status: "Pending", due: "Oct 25" }
+                    ],
+                    discussions: [
+                        {
+                            id: 1,
+                            user: "Linh Nguyen",
+                            time: "2 hours ago",
+                            content: "Chào mọi người, có ai biết khi nào sẽ có bài tập thực hành phần React Hooks không ạ?",
+                            likes: 5
+                        },
+                        {
+                            id: 2,
+                            user: "Administrator",
+                            time: "1 hour ago",
+                            content: "Chào Linh, bài tập sẽ được cập nhật vào tối nay trên tab Evaluations nhé. Các bạn chú ý theo dõi deadline.",
+                            likes: 2
+                        },
+                        {
+                            id: 3,
+                            user: "Minh Tran",
+                            time: "30 mins ago",
+                            content: "Em vừa hoàn thành bài tập Form Validation, code React hơi rối một chút nhưng rất hay ạ. Hy vọng được feedback sớm!",
+                            likes: 0
+                        }
                     ]
                 },
                 { 
@@ -298,6 +329,14 @@
                 }
             ];
 
+            const filteredBatches = batches.filter(batch => {
+                const matchesSearch = batch.name.toLowerCase().includes(searchQuery.toLowerCase());
+                const matchesStatus = statusFilter === "All" || 
+                                     (statusFilter === "Active" && batch.status === "Active Batch") ||
+                                     batch.status === statusFilter;
+                return matchesSearch && matchesStatus;
+            });
+
             const tabs = [
                 { id: "Overview", icon: "overview" },
                 { id: "Dashboard", icon: "dashboard" },
@@ -312,31 +351,66 @@
 
             return (
             <div class="flex-1 overflow-y-auto custom-scrollbar relative z-0">
-                <div class="px-4 sm:px-8 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2 text-sm text-slate-500">
-                    <button onClick={() => setSelectedBatch(null)} class="hover:text-primary transition-colors">Batches</button>
-                    <span class="material-symbols-outlined text-xs">chevron_right</span>
-                    <span class="font-bold text-slate-900 dark:text-slate-100">{selectedBatch ? selectedBatch.name : 'All Batches'}</span>
-                </div>
-
+                <Header 
+                    title={selectedBatch ? selectedBatch.name : 'Batches'} 
+                    subtitle={selectedBatch ? "Explore batch details and progress" : "Manage your learning groups"} 
+                    onMenuClick={onMenuClick} 
+                    searchValue={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    showSearch={!selectedBatch}
+                />
                 <div class="p-4 sm:p-8">
                     {!selectedBatch ? (
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {batches.map(batch => (
-                                <div key={batch.id} onClick={() => { setSelectedBatch(batch); setActiveTab("Overview"); }} class="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm cursor-pointer hover:shadow-md transition-shadow group">
-                                    <div class="flex justify-between items-start mb-4">
-                                        <h3 class="text-xl font-bold group-hover:text-primary transition-colors">{batch.name}</h3>
-                                        <span class={`text-[10px] px-2 py-0.5 rounded font-black uppercase tracking-widest ${batch.status === 'Active Batch' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>{batch.status}</span>
-                                    </div>
-                                    <p class="text-xs text-slate-500 mb-4 line-clamp-2">{batch.description}</p>
-                                    <div class="flex items-center gap-4 text-xs text-slate-400">
-                                        <div class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">menu_book</span> {batch.coursesCount}</div>
-                                        <div class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">schedule</span> {batch.startDate}</div>
-                                    </div>
+                        <div class="space-y-6">
+                            <div class="mb-8">
+                                <h2 class="text-2xl sm:text-3xl font-bold tracking-tight mb-2">My Batches</h2>
+                                <p class="text-sm sm:text-base text-slate-500">Track and manage your cohort-based learning groups.</p>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                                <div class="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide w-full sm:w-auto">
+                                    {["All", "Active", "Upcoming", "Completed"].map((cat) => (
+                                        <button 
+                                            key={cat} 
+                                            onClick={() => setStatusFilter(cat)}
+                                            class={`px-4 sm:px-6 py-2 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${statusFilter === cat ? "bg-primary text-white" : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-primary/50"}`}
+                                        >
+                                            {cat}
+                                        </button>
+                                    ))}
                                 </div>
-                            ))}
+                                <div class="w-full sm:w-auto shrink-0">
+                                    <select class="w-full sm:w-48 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 focus:ring-primary focus:border-primary bg-white dark:bg-slate-800 text-sm font-medium outline-none">
+                                        <option value="">All Categories</option>
+                                        <option value="web-dev">Web Dev</option>
+                                        <option value="design">Design</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {filteredBatches.map(batch => (
+                                    <div key={batch.id} onClick={() => { setSelectedBatch(batch); setActiveTab("Overview"); }} class="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm cursor-pointer hover:shadow-md transition-shadow group">
+                                        <div class="flex justify-between items-start mb-4">
+                                            <h3 class="text-xl font-bold group-hover:text-primary transition-colors line-clamp-1">{batch.name}</h3>
+                                            <span class={`text-[10px] px-2 py-0.5 rounded font-black uppercase tracking-widest ${batch.status === 'Active Batch' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>{batch.status}</span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 mb-4 line-clamp-2">{batch.description}</p>
+                                        <div class="flex items-center gap-4 text-xs text-slate-400">
+                                            <div class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">menu_book</span> {batch.coursesCount}</div>
+                                            <div class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">schedule</span> {batch.startDate}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     ) : (
                         <div class="space-y-6">
+                            <div class="flex items-center gap-2 text-sm text-slate-500 mb-6">
+                                <button onClick={() => setSelectedBatch(null)} class="hover:text-primary transition-colors">Batches</button>
+                                <span class="material-symbols-outlined text-xs">chevron_right</span>
+                                <span class="font-bold text-slate-900 dark:text-slate-100">{selectedBatch.name}</span>
+                            </div>
                             {/* Tab Bar */}
                             <div class="flex gap-6 border-b border-slate-100 dark:border-slate-800 overflow-x-auto scrollbar-hide">
                                 {tabs.map(tab => (
@@ -481,29 +555,67 @@
                                 )}
 
                                 {activeTab === "Discussions" && (
-                                    <div class="space-y-6">
-                                        <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Discussions</h2>
-                                        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
-                                            <div class="flex flex-wrap items-center gap-1 p-2 bg-slate-50 border-b border-slate-100 dark:bg-slate-900/50 dark:border-slate-800">
-                                                {[
-                                                    {icon: 'text_fields', active: true}, {icon: 'format_h1'}, {icon: 'format_bold'}, {icon: 'format_italic'}, {icon: 'format_strikethrough'}, 
-                                                    {icon: 'link'}, {icon: 'image_aspect_ratio'}, {icon: 'format_list_bulleted'}, {icon: 'format_list_numbered'}, {icon: 'check_box'},
-                                                    {icon: 'format_align_left'}, {icon: 'format_align_center'}, {icon: 'format_align_right'},
-                                                    {icon: 'image'}, {icon: 'videocam'}, {icon: 'format_quote'}, {icon: 'code'}, {icon: 'smart_display'},
-                                                    {icon: 'unfold_more'}, {icon: 'table_chart'}, {icon: 'description'}, {icon: 'undo'}, {icon: 'redo'}
-                                                ].map((btn, i) => (
-                                                    <button key={i} class={`p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors flex items-center justify-center ${btn.active ? 'bg-slate-200 dark:bg-slate-800' : ''}`}>
-                                                        <span class="material-symbols-outlined text-[18px] text-slate-500">{btn.icon}</span>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                            <textarea 
-                                                class="w-full h-48 p-4 bg-transparent resize-none focus:outline-none placeholder:text-slate-400 text-sm"
-                                                placeholder="Type your reply here..."
-                                            ></textarea>
+                                    <div class="space-y-8">
+                                        <div class="flex justify-between items-center">
+                                            <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Discussions</h2>
+                                            <span class="text-xs text-slate-400 font-medium">{selectedBatch.discussions?.length || 0} Comments</span>
                                         </div>
-                                        <div class="flex justify-end">
-                                            <button class="px-6 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded font-bold text-sm hover:bg-slate-200 transition-colors">Post</button>
+
+                                        {/* Discussion Posts List */}
+                                        <div class="space-y-6">
+                                            {selectedBatch.discussions?.map(post => (
+                                                <div key={post.id} class="flex gap-4 group">
+                                                    <div class="size-10 shrink-0 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-500 text-xs shadow-sm">
+                                                        {post.user.split(' ').map(n=>n[0]).join('')}
+                                                    </div>
+                                                    <div class="flex-1 space-y-2">
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="font-bold text-sm text-slate-900 dark:text-white">{post.user}</span>
+                                                            <span class="text-[10px] text-slate-400 font-medium tracking-wide">• {post.time}</span>
+                                                        </div>
+                                                        <div class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm group-hover:border-primary/20 transition-colors">
+                                                            {post.content}
+                                                        </div>
+                                                        <div class="flex items-center gap-4 pt-1 px-1">
+                                                            <button class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-rose-500 transition-colors">
+                                                                <span class="material-symbols-outlined text-[16px] leading-none">favorite</span>
+                                                                {post.likes > 0 && <span>{post.likes}</span>}
+                                                                <span class="font-bold">Like</span>
+                                                            </button>
+                                                            <button class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-primary transition-colors">
+                                                                <span class="material-symbols-outlined text-[16px] leading-none">reply</span>
+                                                                <span class="font-bold">Reply</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* Editor Section */}
+                                        <div class="pt-6 border-t border-slate-100 dark:border-slate-800">
+                                            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
+                                                <div class="flex flex-wrap items-center gap-1 p-2 bg-slate-50 border-b border-slate-100 dark:bg-slate-900/50 dark:border-slate-800">
+                                                    {[
+                                                        {icon: 'text_fields', active: true}, {icon: 'format_h1'}, {icon: 'format_bold'}, {icon: 'format_italic'}, {icon: 'format_strikethrough'}, 
+                                                        {icon: 'link'}, {icon: 'image_aspect_ratio'}, {icon: 'format_list_bulleted'}, {icon: 'format_list_numbered'}, {icon: 'check_box'},
+                                                        {icon: 'format_align_left'}, {icon: 'format_align_center'}, {icon: 'format_align_right'},
+                                                        {icon: 'image'}, {icon: 'videocam'}, {icon: 'format_quote'}, {icon: 'code'}, {icon: 'smart_display'},
+                                                        {icon: 'unfold_more'}, {icon: 'table_chart'}, {icon: 'description'}, {icon: 'undo'}, {icon: 'redo'}
+                                                    ].map((btn, i) => (
+                                                        <button key={i} class={`p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors flex items-center justify-center ${btn.active ? 'bg-slate-200 dark:bg-slate-800' : ''}`}>
+                                                            <span class="material-symbols-outlined text-[18px] text-slate-500">{btn.icon}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <textarea 
+                                                    class="w-full h-32 p-4 bg-transparent resize-none focus:outline-none placeholder:text-slate-400 text-sm"
+                                                    placeholder="Type your reply here..."
+                                                ></textarea>
+                                            </div>
+                                            <div class="flex justify-end mt-4">
+                                                <button class="px-8 py-2 bg-primary text-white rounded font-bold text-sm shadow-md hover:bg-primary/90 transition-all">Post Comment</button>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
