@@ -628,18 +628,58 @@
                                 </section>
                                 <section>
                                     <h2 class="text-xl font-bold mb-4">Course Outline</h2>
-                                    <div class="space-y-4">
+                                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
                                         {[
-                                            { title: "Module 1: Introduction to UI Design", duration: "2h 15m" },
-                                            { title: "Module 2: Typography & Color Theory", duration: "3h 45m" },
-                                            { title: "Module 3: Visual Design Principles", duration: "3h 20m" },
-                                            { title: "Module 4: Design Systems & Components", duration: "4h 10m" },
-                                            { title: "Module 5: Advanced Motion & Prototyping", duration: "5h 30m" }
-                                        ].map((module, i) => (
-                                            <div key={i} class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                                                <span class="font-semibold text-sm sm:text-base text-slate-800 dark:text-slate-200">{module.title}</span>
-                                            </div>
-                                        ))}
+                                            { 
+                                                title: "Introduction", 
+                                                lessons: [
+                                                    { title: "What is a Learning Management System?", type: "video" },
+                                                    { title: "What is Frappe Learning?", type: "video" }
+                                                ]
+                                            },
+                                            { 
+                                                title: "Adding content to your lessons", 
+                                                lessons: [
+                                                    { title: "Lesson Types Overview", type: "video" },
+                                                    { title: "Building your first curriculum", type: "article" },
+                                                    { title: "Assignment & Project settings", type: "assignment" }
+                                                ]
+                                            },
+                                            { 
+                                                title: "Assessments", 
+                                                lessons: [
+                                                    { title: "Course Feedback Survey", type: "quiz" },
+                                                    { title: "Final Exam Preparation", type: "video" }
+                                                ]
+                                            }
+                                        ].map((module, i) => {
+                                            const [isOpen, setIsOpen] = useState(i === 0);
+                                            return (
+                                                <div key={i} class={`${i !== 0 ? 'border-t border-slate-100 dark:border-slate-800' : ''}`}>
+                                                    <button 
+                                                        onClick={() => setIsOpen(!isOpen)}
+                                                        class="w-full flex items-center justify-between p-5 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group"
+                                                    >
+                                                        <div class="flex items-center gap-4">
+                                                            <span class={`material-symbols-outlined text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>expand_more</span>
+                                                            <span class="font-bold text-slate-800 dark:text-slate-200 group-hover:text-primary transition-colors">{module.title}</span>
+                                                        </div>
+                                                    </button>
+                                                    {isOpen && (
+                                                        <div class="bg-slate-50/50 dark:bg-slate-800/20 pb-2">
+                                                            {module.lessons.map((lesson, j) => (
+                                                                <div key={j} class="flex items-center gap-3 px-14 py-3 hover:bg-white dark:hover:bg-slate-800 transition-colors cursor-pointer group/item">
+                                                                    <span class="material-symbols-outlined text-slate-400 text-[20px] group-hover/item:text-primary transition-colors">
+                                                                        {lesson.type === 'video' ? 'smart_display' : lesson.type === 'assignment' ? 'assignment' : 'description'}
+                                                                    </span>
+                                                                    <span class="text-sm text-slate-600 dark:text-slate-400 group-hover/item:text-slate-900 dark:group-hover/item:text-slate-200 transition-colors">{lesson.title}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </section>
                             </div>
