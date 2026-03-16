@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>EduFlow - Comprehensive Student Learning Portal</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ec5b13",
+                        "background-light": "#f6f7f6",
+                        "background-dark": "#161d15",
+                    },
+                    fontFamily: {
+                        "display": ["'Public Sans'", "sans-serif"],
+                        "sans": ["'Public Sans'", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "0.5rem", "xl": "0.5rem", "2xl": "0.5rem", "3xl": "0.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Public Sans', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 10px;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+    <div id="root"></div>
+
+    <!-- React Dependencies -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/history@5/umd/history.development.js"></script>
+    <script src="https://unpkg.com/react-router@6.3.0/umd/react-router.development.js"></script>
+    <script src="https://unpkg.com/react-router-dom@6.3.0/umd/react-router-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { createRoot } = ReactDOM;
+        const { MemoryRouter, Routes, Route, Link, useNavigate, useLocation } = ReactRouterDOM;
+
+        // --- Shared Components ---
+
+        const Sidebar = ({ isOpen, setIsOpen }) => {
+            const location = useLocation();
+            const isActive = (path) => location.pathname === path;
+
+            const navItems = [
+                { path: "/", label: "Dashboard", icon: "dashboard" },
+                { path: "/programs", label: "Programs", icon: "school" },
+                { path: "/courses", label: "All Courses", icon: "book_4" },
+                { path: "/batch", label: "Batches", icon: "list_alt" },
+                { path: "/classes", label: "My Classes", icon: "calendar_month" },
+                { path: "/notifications", label: "Notifications", icon: "notifications" },
+            ];
+
+            return (
+                <>
+                    {/* Mobile Overlay */}
+                    {isOpen && (
+                        <div 
+                            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                            onClick={() => setIsOpen(false)}
+                        />
+                    )}
+                    <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 lg:w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col h-full shrink-0 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+                        <div class="p-6 flex items-center justify-between lg:justify-start gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="size-10 bg-primary rounded-lg flex items-center justify-center text-white">
+                                    <span class="material-symbols-outlined">auto_stories</span>
+                                </div>
+                                <h2 class="text-xl font-bold tracking-tight text-primary">EduFlow</h2>
+                            </div>
+                            <button className="lg:hidden text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" onClick={() => setIsOpen(false)}>
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <nav class="flex-1 px-4 py-2 space-y-1 overflow-y-auto custom-scrollbar">
+                            {navItems.map((item) => (
+                                <Link 
+                                    key={item.path}
+                                    to={item.path} 
+                                    onClick={() => setIsOpen(false)}
+                                    class={`flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
+                                        isActive(item.path) 
+                                        ? "bg-primary/10 text-primary font-bold" 
+                                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                    }`}
+                                >
+                                    <span class="material-symbols-outlined">{item.icon}</span>
+                                    <span class="font-medium">{item.label}</span>
+                                </Link>
+                            ))}
+                        </nav>
+                        <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+                            <Link to="/profile" onClick={() => setIsOpen(false)} class="flex items-center gap-3 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                <div class="size-10 rounded-full bg-slate-200" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAwhhf7efEdSKrfCPnnA3Ol8gDD7MdAFH1625R0dfxjQJbEmkxanTISHmd2MjQ05LOr59kb4fAmroE1Pcxz3wQYGUK4af_P3-88b5_bn4T7XiaYTCY54_zS7ewJdsdyIsUY5I8Xz6NDtvCIKJpFRdm8SJO9_H5vYCBXjWgt6hcKTprW-dnHE7q3gLZ_Y0FREDRmJNx_5CrCplUnFqu1fB5hwmsueSZHlFqKXXjAYMlncckbXipVSVP-U8l-oQXT3NFd94mOWMxDx0v1')", backgroundSize: 'cover' }}></div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-semibold truncate">Alex Johnson</p>
+                                    <p class="text-xs text-slate-500 truncate">Premium Student</p>
+                                </div>
+                                <span class="material-symbols-outlined text-slate-400 text-sm cursor-pointer">settings</span>
+                            </Link>
+                        </div>
+                    </aside>
+                </>
+            );
+        };
+
+        const Header = ({ title, subtitle, showSearch = true, onMenuClick }) => {
+            return (
+                <header class="flex flex-col gap-4 px-4 sm:px-8 py-4 sm:py-6 sticky top-0 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md z-30 shrink-0 border-b border-slate-200 dark:border-slate-800">
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-3 w-auto min-w-0">
+                            <div class="flex-1 min-w-0">
+                                <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-50 truncate">{title}</h1>
+                                {subtitle && <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 mt-1 truncate hidden sm:block">{subtitle}</p>}
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 sm:gap-4 w-auto justify-end relative z-40 shrink-0 flex-1 sm:flex-none">
+                            <Link to="/notifications" class="relative p-2 text-slate-500 hover:text-primary transition-colors block">
+                                <span class="material-symbols-outlined text-2xl">notifications</span>
+                                <span class="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+                            </Link>
+                            <button onClick={onMenuClick} className="lg:hidden text-slate-600 dark:text-slate-300 hover:text-primary transition-colors shrink-0 ml-2">
+                                <span className="material-symbols-outlined text-2xl">menu</span>
+                            </button>
+                        </div>
+                    </div>
+                    {showSearch && (
+                        <div class="relative block w-full z-40">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                            <input class="w-full pl-10 pr-4 py-2 rounded-lg border-slate-200 dark:border-slate-700 focus:ring-primary focus:border-primary bg-white dark:bg-slate-800" placeholder="Search..." type="text"/>
+                        </div>
+                    )}
+                </header>
+            );
+        };
+
+        // --- Screen Components ---
+
+        const DashboardPage = ({ onMenuClick }) => (
+            <div class="flex-1 overflow-y-auto custom-scrollbar relative z-0">
+                <header class="flex flex-col gap-4 px-4 sm:px-8 py-4 sm:py-6 sticky top-0 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md z-30 shrink-0 border-b border-slate-200 dark:border-slate-800">
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-3 w-auto min-w-0">
+                            <div class="flex-1 min-w-0">
+                                <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-50 truncate">Dashboard</h1>
+                                <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 mt-1 hidden sm:block truncate">Welcome back, Alex!</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 w-auto justify-end relative z-40 shrink-0 flex-1 sm:flex-none">
+                            <Link to="/notifications" class="relative p-2 text-slate-500 hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined text-2xl">notifications</span>
+                                <span class="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+                            </Link>
+                            <button onClick={onMenuClick} className="lg:hidden text-slate-600 dark:text-slate-300 hover:text-primary transition-colors shrink-0 ml-2">
+                                <span className="material-symbols-outlined text-2xl">menu</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="relative block w-full z-40">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                        <input class="w-full pl-10 pr-4 py-2 rounded-lg border-slate-200 dark:border-slate-700 focus:ring-primary focus:border-primary bg-white dark:bg-slate-800" placeholder="Search..." type="text"/>
+                    </div>
+                </header>
+                <div class="p-4 sm:p-8">
+                    <section class="relative overflow-hidden rounded-lg bg-primary text-white p-6 sm:p-10 min-h-[auto] sm:min-h-[340px] flex items-center mb-8">
+                        <div class="relative z-10 w-full md:w-2/3">
+                            <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-semibold mb-4 inline-block">Active Module</span>
+                            <h1 class="text-2xl sm:text-4xl font-bold mb-4 leading-tight">Advanced UI Design</h1>
+                            <p class="text-white/80 mb-8 max-w-md text-sm sm:text-base">75% completed. Finish the last lesson today to stay on track!</p>
+                            <Link to="/course-overview" class="bg-white text-primary px-6 sm:px-8 py-3 rounded-lg font-bold hover:bg-slate-100 transition-colors shadow-lg inline-block w-full sm:w-auto text-center">
+                                Resume
+                            </Link>
+                        </div>
+                        <div class="absolute right-[-10%] top-0 bottom-0 w-1/2 bg-cover bg-center opacity-40 mix-blend-overlay hidden lg:block" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCF2AjF_PtTPTr2-VjjREWRRPIFZ_EbTuGjgkpqrMjUGm1u8irZW09S3YPn49nXbQ0P_EHN-poPnqcjjoFgF07oQcC7ZMhvAn0NRJFanlsFiMsn9cGrsMrx3dhhZXBsmBghEakL59-PGv8OcB7OYJSPDFf1rbGnj4KR4PK3bf0PpXpdPWsVViGcKR3NmPThnhzU_X1uZJnnwaXkNpLtsP3XWnq8hMGzvgFvJw95RGac-uD2OG0FyUbWpzX09EwJuAERGzO9YFMc3ksX')" }}></div>
+                    </section>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <div class="lg:col-span-8 space-y-8">
+                            <section>
+                                <div class="flex justify-between items-center mb-6">
+                                    <h2 class="text-xl font-bold">My Active Courses</h2>
+                                    <Link to="/courses" class="text-primary font-semibold text-sm">View All</Link>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <Link to="/course-overview" class="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-100 dark:border-slate-800 shadow-sm flex gap-4 hover:shadow-md transition-shadow group">
+                                        <div class="w-20 sm:w-24 h-20 sm:h-24 rounded-lg bg-cover bg-center shrink-0" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCEvamPosyp3QlQvXd2qMEd_m41Nco7_AOZnTlqEWN33oaR25j3Iq9UYV9hX8a8nxDyQWKJVcNXAYqg7lD8Vo6cHqdL2gTdi-ntErHZA4KsYT6DTjpQiROCefG-hhpmV_ICu3otaxfyN-iybd0K_mlN7O_aEDveTw98tIV4WqlqSzNvnQ-vUmAK4oAxqX-_WYvl5_t65346TlIxCfbFvZO6IvT2uDGZMsoSutTnRMH3mB_3-4misEhJxOQNtcfuI4OxiHcdvnblad2_')" }}></div>
+                                        <div class="flex flex-col justify-center flex-1">
+                                            <h4 class="font-bold text-sm mb-2 group-hover:text-primary transition-colors">Visual Hierarchy 101</h4>
+                                            <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mb-2">
+                                                <div class="bg-primary h-1.5 rounded-full" style={{ width: '45%' }}></div>
+                                            </div>
+                                            <span class="text-xs text-slate-500 font-medium">45% Completed</span>
+                                        </div>
+                                    </Link>
+                                    <Link to="/course-overview" class="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-100 dark:border-slate-800 shadow-sm flex gap-4 hover:shadow-md transition-shadow group">
+                                        <div class="w-20 sm:w-24 h-20 sm:h-24 rounded-lg bg-cover bg-center shrink-0" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDeTqCkYyPA5myoPHLaNquv_leDbGFnKn9rbZG98_cfb2gW0dac80JhWmpHv5p1KydMgR3qntjicobcnYAxYZotbWUPna63cliqbtJtQn_yKOAUHFf5URNMMw146lMa8db2eDuHPkUBjTpdtaVkgBrlFMbTL0sEBYv07KXX9Xn0d-nVawwXw0wrNuo803WsnbV4gKoP_2XKnmEYj6oL3_MLzCYHYKmF-Xwyh_4z9WDiwOLAvx4MiN09F_idclGzM9U3fStYQz8rsarj')" }}></div>
+                                        <div class="flex flex-col justify-center flex-1">
+                                            <h4 class="font-bold text-sm mb-2 group-hover:text-primary transition-colors">Typography Masters</h4>
+                                            <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mb-2">
+                                                <div class="bg-primary h-1.5 rounded-full" style={{ width: '82%' }}></div>
+                                            </div>
+                                            <span class="text-xs text-slate-500 font-medium">82% Completed</span>
+                                        </div>
+                                    </Link>
+                                </div>
+                            </section>
+                        </div>
+
+                        <div class="lg:col-span-4 space-y-8">
+                            <section class="bg-white dark:bg-slate-900 rounded-lg p-6 border border-slate-100 dark:border-slate-800 shadow-sm">
+                                <button class="w-full mt-8 py-3 border-2 border-slate-50 dark:border-slate-800 rounded-lg text-slate-400 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                    View Calendar
+                                </button>
+                            </section>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const BatchPage = ({ onMenuClick }) => {
+            const [selectedBatch, setSelectedBatch] = useState(null);
+
+            const batches = [
+                { id: 1, name: "Fall 2023 Fullstack", status: "Active Batch", courses: 2, quizzes: 3, assignments: 5, exercises: 12 },
+                { id: 2, name: "Spring 2024 UI/UX", status: "Upcoming", courses: 1, quizzes: 0, assignments: 2, exercises: 5 },
+                { id: 3, name: "Summer 2023 Data Science", status: "Completed", courses: 3, quizzes: 10, assignments: 15, exercises: 20 },
+            ];
+
+            return (
+            <div class="flex-1 overflow-y-auto custom-scrollbar relative z-0">
+                <Header title="Batches" subtitle="Access your courses, quizzes, assignments, and programming exercises" onMenuClick={onMenuClick} />
+                <div class="p-4 sm:p-8 space-y-8">
+                    {!selectedBatch ? (
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {batches.map(batch => (
+                                <div key={batch.id} onClick={() => setSelectedBatch(batch)} class="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm cursor-pointer hover:shadow-md transition-shadow group">
+                                    <div class="flex justify-between items-start mb-4">
+                                        <h3 class="text-xl font-bold group-hover:text-primary transition-colors">{batch.name}</h3>
+                                        <span class={`text-xs px-2 py-1 rounded font-semibold ${batch.status === 'Active Batch' ? 'bg-emerald-100 text-emerald-700' : batch.status === 'Completed' ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' : 'bg-blue-100 text-blue-700'}`}>{batch.status}</span>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4 text-sm">
+                                        <div class="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                                            <span class="material-symbols-outlined text-base">menu_book</span> {batch.courses} Courses
+                                        </div>
+                                        <div class="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                                            <span class="material-symbols-outlined text-base">quiz</span> {batch.quizzes} Quizzes
+                                        </div>
+                                        <div class="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                                            <span class="material-symbols-outlined text-base">assignment</span> {batch.assignments} Assignments
+                                        </div>
+                                        <div class="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                                            <span class="material-symbols-outlined text-base">code</span> {batch.exercises} Exercises
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div class="space-y-8">
+                            <button onClick={() => setSelectedBatch(null)} class="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors font-medium">
+                                <span class="material-symbols-outlined">arrow_back</span> Back to Batches
+                            </button>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                <div class="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
+                                    <div class="size-12 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
+                                        <span class="material-symbols-outlined text-3xl">menu_book</span>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-slate-500 font-medium">Courses</p>
+                                        <h3 class="text-2xl font-bold">{selectedBatch.courses}</h3>
+                                    </div>
+                                </div>
+                                <div class="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
+                                    <div class="size-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                        <span class="material-symbols-outlined text-3xl">quiz</span>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-slate-500 font-medium">Pending Quizzes</p>
+                                        <h3 class="text-2xl font-bold">{selectedBatch.quizzes}</h3>
+                                    </div>
+                                </div>
+                                <div class="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
+                                    <div class="size-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                        <span class="material-symbols-outlined text-3xl">assignment</span>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-slate-500 font-medium">Assignments</p>
+                                        <h3 class="text-2xl font-bold">{selectedBatch.assignments}</h3>
+                                    </div>
+                                </div>
+                                <div class="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
+                                    <div class="size-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                        <span class="material-symbols-outlined text-3xl">code</span>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-slate-500 font-medium">Programming Ex.</p>
+                                        <h3 class="text-2xl font-bold">{selectedBatch.exercises}</h3>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                                <div class="px-4 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                                    <h2 class="font-bold text-lg">Batch: {selectedBatch.name}</h2>
+                                    <span class="text-sm text-slate-500">{selectedBatch.status}</span>
+                                </div>
+                                <div class="divide-y divide-slate-100 dark:divide-slate-800">
+                            <div class="flex items-center gap-4 px-4 sm:px-6 py-5 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer group">
+                                <div class="size-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                                    <span class="material-symbols-outlined text-lg font-bold">menu_book</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-primary transition-colors text-sm sm:text-base">React Fundamentals Course</h4>
+                                    <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-1">
+                                        <span class="text-xs sm:text-sm text-slate-500 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[10px] sm:text-xs">play_circle</span> 24 Lessons
+                                        </span>
+                                        <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">In Progress</span>
+                                    </div>
+                                </div>
+                                <button class="text-slate-400 hover:text-primary"><span class="material-symbols-outlined">chevron_right</span></button>
+                            </div>
+                            <div class="flex items-center gap-4 px-4 sm:px-6 py-5 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer group">
+                                <div class="size-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                                    <span class="material-symbols-outlined text-lg font-bold">quiz</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-primary transition-colors text-sm sm:text-base">React Basics Quiz</h4>
+                                    <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-1">
+                                        <span class="text-xs sm:text-sm text-slate-500 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[10px] sm:text-xs">timer</span> 30m
+                                        </span>
+                                        <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded">To Do</span>
+                                    </div>
+                                </div>
+                                <button class="text-slate-400 hover:text-primary"><span class="material-symbols-outlined">chevron_right</span></button>
+                            </div>
+                            <div class="flex items-center gap-4 px-4 sm:px-6 py-5 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer group">
+                                <div class="size-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 shrink-0">
+                                    <span class="material-symbols-outlined text-lg font-bold">assignment</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-primary transition-colors text-sm sm:text-base">Build a Portfolio Assignment</h4>
+                                    <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-1">
+                                        <span class="text-xs sm:text-sm text-slate-500 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[10px] sm:text-xs">calendar_today</span> Due in 2 days
+                                        </span>
+                                        <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-purple-600 bg-purple-50 px-2 py-0.5 rounded">Pending</span>
+                                    </div>
+                                </div>
+                                <button class="text-slate-400 hover:text-primary"><span class="material-symbols-outlined">chevron_right</span></button>
+                            </div>
+                            <div class="flex items-center gap-4 px-4 sm:px-6 py-5 bg-primary/5 border-l-4 border-primary group cursor-pointer">
+                                <div class="size-8 rounded-full bg-primary flex items-center justify-center text-white shrink-0">
+                                    <span class="material-symbols-outlined text-lg">code</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-semibold text-primary text-sm sm:text-base">Programming Exercise: Array Manipulation</h4>
+                                    <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-1">
+                                        <span class="text-xs sm:text-sm text-slate-500 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[10px] sm:text-xs">star</span> 100 Points
+                                        </span>
+                                        <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded">In Progress</span>
+                                    </div>
+                                </div>
+                                <button class="text-slate-400"><span class="material-symbols-outlined">chevron_right</span></button>
+                            </div>
+                        </div>
+                    </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+            );
+        };
+
+        const CourseOverviewPage = ({ onMenuClick, isPaid = true }) => (
+            <div class="flex-1 overflow-y-auto custom-scrollbar relative z-0">
+                <Header title="Course Overview" subtitle="Advanced UI Design: Motion & Prototyping" onMenuClick={onMenuClick} />
+                <div class="p-4 sm:p-8 max-w-5xl mx-auto space-y-8">
+                    <div class="bg-white dark:bg-slate-900 rounded-lg p-6 sm:p-8 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col md:flex-row gap-6 sm:gap-8 items-center">
+                        <div class="w-full md:w-1/3 aspect-video rounded-lg bg-cover bg-center shrink-0" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCF2AjF_PtTPTr2-VjjREWRRPIFZ_EbTuGjgkpqrMjUGm1u8irZW09S3YPn49nXbQ0P_EHN-poPnqcjjoFgF07oQcC7ZMhvAn0NRJFanlsFiMsn9cGrsMrx3dhhZXBsmBghEakL59-PGv8OcB7OYJSPDFf1rbGnj4KR4PK3bf0PpXpdPWsVViGcKR3NmPThnhzU_X1uZJnnwaXkNpLtsP3XWnq8hMGzvgFvJw95RGac-uD2OG0FyUbWpzX09EwJuAERGzO9YFMc3ksX')" }}></div>
+                        <div class="flex-1 space-y-4 text-center md:text-left">
+                            <span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-semibold">UI/UX Design</span>
+                            <h1 class="text-2xl sm:text-3xl font-bold">Advanced UI Design: Motion & Prototyping</h1>
+                            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400">Master the art of creating engaging, interactive user interfaces through advanced motion design and high-fidelity prototyping techniques.</p>
+                            <div class="flex items-center justify-center md:justify-start gap-2 mb-2">
+                                <span class="text-slate-500 text-sm">Instructor:</span>
+                                <span class="text-primary font-bold text-sm">Jane Doe</span>
+                            </div>
+                            <div class="flex flex-wrap items-center justify-center md:justify-start gap-4 sm:gap-6 text-xs sm:text-sm text-slate-500">
+                                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">schedule</span> 12 Hours</span>
+                                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">menu_book</span> 24 Lessons</span>
+                                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">military_tech</span> Certificate</span>
+                            </div>
+                            <div class="pt-4">
+                                <Link to="/lesson" class="bg-primary text-white w-full md:w-auto px-8 py-3 rounded-lg font-bold hover:bg-primary/90 transition-colors shadow-md inline-flex items-center justify-center gap-2">
+                                    {isPaid ? (
+                                        <><span class="material-symbols-outlined">shopping_cart</span> Buy this course</>
+                                    ) : (
+                                        <><span class="material-symbols-outlined">play_circle</span> Start Learning</>
+                                    )}
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="md:col-span-2 space-y-8">
+                            <section>
+                                <h2 class="text-xl font-bold mb-4">Key Features</h2>
+                                <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
+                                    In this comprehensive course, you will learn how to breathe life into your static designs. 
+                                    We cover everything from basic animation principles to complex micro-interactions that delight users.
+                                    By the end of this course, you'll be able to build production-ready prototypes that perfectly communicate your vision to developers and stakeholders.
+                                </p>
+                            </section>
+                            <section>
+                                <h2 class="text-xl font-bold mb-4">Course Outline</h2>
+                                <div class="space-y-4">
+                                    {[
+                                        { title: "Module 1: Introduction to UI Design", duration: "2h 15m" },
+                                        { title: "Module 2: Typography & Color Theory", duration: "3h 45m" },
+                                        { title: "Module 3: Visual Design Principles", duration: "3h 20m" },
+                                        { title: "Module 4: Design Systems & Components", duration: "4h 10m" },
+                                        { title: "Module 5: Advanced Motion & Prototyping", duration: "5h 30m" }
+                                    ].map((module, i) => (
+                                        <div key={i} class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                                            <span class="font-semibold text-sm sm:text-base text-slate-800 dark:text-slate-200">{module.title}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+                        </div>
+                        <div class="space-y-6">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const LessonPlayerPage = ({ onMenuClick }) => (
+            <div class="flex-1 overflow-y-auto custom-scrollbar relative z-0">
+                <Header title="Lesson Player" subtitle="Watch and learn" onMenuClick={onMenuClick} />
+                <div class="p-4 sm:p-8 max-w-[1600px] mx-auto w-full">
+                    <header class="flex flex-col lg:flex-row lg:items-center justify-between mb-8 gap-4">
+                        <div>
+                            <div class="flex items-center gap-2 text-slate-500 text-xs sm:text-sm mb-1">
+                                <span>Courses</span><span class="material-symbols-outlined text-[10px] sm:text-xs">chevron_right</span><span>Advanced UI Design</span>
+                            </div>
+                            <h2 class="text-xl sm:text-2xl font-bold">Module 4: Design Systems & Components</h2>
+                        </div>
+                        <div class="flex items-center gap-2 sm:gap-4 w-full lg:w-auto">
+                            <button class="flex-1 lg:w-48 flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors whitespace-nowrap">
+                                <span class="material-symbols-outlined">skip_previous</span><span class="font-medium text-sm">Previous</span>
+                            </button>
+                            <button class="flex-1 lg:w-48 flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm whitespace-nowrap">
+                                <span class="font-medium text-sm">Next</span><span class="material-symbols-outlined text-lg">skip_next</span>
+                            </button>
+                        </div>
+                    </header>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                        <div class="lg:col-span-8 flex flex-col gap-6">
+                            <div class="aspect-video bg-black rounded-lg overflow-hidden shadow-xl relative group">
+                                <div class="absolute inset-0 bg-cover bg-center opacity-60" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDNjCPfHfxAFJs7-lnQ8JG9cz5ILsy5RgpLfJ-2lKGMMvDmu6BVrJDtFgRCxNMJ8cC2RqWY5SRy6kN7wWLIZtN2RDJpx8jSjqY6DqzV7jB8ekCSfYRxsb0VruZNjC7Oht4oMdzh508jGQy8wVAQdVTt1-vmRverLOUDIPmStYs_lyoHst2_Rlx08sNJ_OtXVQksViDJFKUHxn2SzN9eT75PKS32ZqkrDADszu-orED366X1c-NE0sXng6GS9Mr1fgbncNcJ3_nECnWf')" }}></div>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <button class="size-16 sm:size-20 bg-primary/90 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform">
+                                        <span class="material-symbols-outlined text-4xl sm:text-5xl">play_arrow</span>
+                                    </button>
+                                </div>
+                                <div class="absolute bottom-0 inset-x-0 p-4 sm:p-6 bg-gradient-to-t from-black/80 to-transparent">
+                                    <div class="w-full bg-white/30 h-1.5 rounded-full overflow-hidden mb-4">
+                                        <div class="bg-primary h-full w-[65%] rounded-full"></div>
+                                    </div>
+                                    <div class="flex items-center justify-between text-white">
+                                        <div class="flex items-center gap-2 sm:gap-4">
+                                            <span class="material-symbols-outlined cursor-pointer text-sm sm:text-base">skip_previous</span>
+                                            <span class="material-symbols-outlined cursor-pointer text-sm sm:text-base">play_arrow</span>
+                                            <span class="material-symbols-outlined cursor-pointer text-sm sm:text-base">skip_next</span>
+                                            <span class="text-xs sm:text-sm font-medium">12:45 / 24:00</span>
+                                        </div>
+                                        <span class="material-symbols-outlined cursor-pointer text-sm sm:text-base">fullscreen</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white dark:bg-slate-900 rounded-lg p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-primary font-bold text-sm">Jane Doe</span>
+                                    <span class="text-slate-400 text-xs">• Instructor</span>
+                                </div>
+                                <h3 class="text-lg sm:text-xl font-bold mb-4">Understanding Atoms, Molecules, and Organisms</h3>
+                                <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed">In this lesson, we dive deep into the Atomic Design methodology. We'll explore how to break down complex UI components into their most basic elements and how to build them back up into scalable design systems.</p>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-4 flex flex-col gap-6">
+                            <div class="bg-white dark:bg-slate-900 rounded-lg p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+                                <h4 class="font-bold mb-4">Course Progress</h4>
+                                <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full mb-3">
+                                    <div class="bg-primary h-full w-[65%] rounded-full"></div>
+                                </div>
+                                <p class="text-xs text-slate-500 mb-6">12 of 18 lessons completed</p>
+
+                                <h4 class="font-bold mb-4">Chapters</h4>
+                                <div class="space-y-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="size-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                                            <span class="material-symbols-outlined text-[14px] font-bold">check</span>
+                                        </div>
+                                        <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300">1. Introduction to UI Design</p>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <div class="size-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                                            <span class="material-symbols-outlined text-[14px] font-bold">check</span>
+                                        </div>
+                                        <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300">2. Color Theory Fundamentals</p>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <div class="size-6 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0">
+                                            <span class="material-symbols-outlined text-[14px] font-bold">play_arrow</span>
+                                        </div>
+                                        <p class="text-xs sm:text-sm font-bold text-primary">3. Understanding Atoms, Molecules, and Organisms</p>
+                                    </div>
+                                    <div class="flex items-center gap-3 opacity-50">
+                                        <div class="size-6 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center shrink-0">
+                                            <span class="text-xs font-bold">4</span>
+                                        </div>
+                                        <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300">4. Prototyping Basics</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const AllCoursesPage = ({ onMenuClick }) => (
+            <div class="flex-1 overflow-y-auto custom-scrollbar relative z-0">
+                <Header title="All Courses" subtitle="Find your next topic" onMenuClick={onMenuClick} />
+                <div class="p-4 sm:p-8">
+                    <div class="mb-8">
+                        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight mb-2">My Learning Journey</h2>
+                        <p class="text-sm sm:text-base text-slate-500">Explore new programming paths or resume your studies.</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                        <div class="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide w-full sm:w-auto">
+                            {["Live", "New", "Upcoming", "Enrolled"].map((cat, i) => (
+                                <button key={i} class={`px-4 sm:px-6 py-2 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${i===0 ? "bg-primary text-white" : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-primary/50"}`}>
+                                    {cat}
+                                </button>
+                            ))}
+                        </div>
+                        <div class="w-full sm:w-auto shrink-0">
+                            <select class="w-full sm:w-48 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 focus:ring-primary focus:border-primary bg-white dark:bg-slate-800 text-sm font-medium outline-none">
+                                <option value="">All Categories</option>
+                                <option value="web-dev">Web Dev</option>
+                                <option value="data-science">Data Science</option>
+                                <option value="python">Python</option>
+                                <option value="ui-ux">UI/UX</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {[
+                            { title: "Modern Web Architecture with React", progress: 75, tag: "Advanced", instructor: "Michael Scott", price: "$49.99", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuC7AJ86FklWZ8XT01b2_HAyyYfe89WYwrmAuH8B9dOHgoQfY2KCRFPBESFq1RknoVEZL_8-wIukL5qjTLl-QJrZSAhl0pjWQzZOBufvYGl8Zv3BG3xmvC2RhEDO5IRdzVLdFGWTpNzcelZx_vvGMPQb7ojhcKiMUTucHbPTF6IxG2R2Fms_cw5nWvLT5lxds0Zf7RWVf-DUlJxNFRs0fyYrsoasEFab870U2Pr1bsnIOITBsbOZ8SkjaKZORENfrEPxW-hnhkQ_myvT" },
+                            { title: "Python for Data Science 101", progress: 22, tag: "Beginner", instructor: "Jane Smith", price: "Free", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuAXC4wRyR6LNVFF-aUy0IhYW6humIrxV8SYt_VJnb1wnn-nlqSUVxcjiuFhDPuJNTIkvCk9BFN5RzuwuFQa1rjZ6o-1hxRgIeVQ1iQo-mkXd8EM20pad1f8U_cHnflQwGtZpEpge2BLktUM1rkSMmBS47aGzE64dhM0VFfOjFTyLitSW2KojoVHk7jniH9Oh0MUJfdb2Ubg2yHHuZoxI27OmpCValX8JgRW4jcsRpv-ijWp3iD8BfVfZ6Aad2COczYtMsE2qUACwVOm" },
+                            { title: "Algorithm Masterclass", progress: 48, tag: "Intermediate", instructor: "Robert Fox", price: "$29.99", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDEseY7p1xlwlFSkRhIF3f2pCIfB8t8K0Qa9Hc2eXWgH-ZJJcq-0yeInWCJ18EeANmg1TmJaL0PavMPDGXzeYMN4w7X5dK_GHBxos2xNZcqGN9Vv0kB-cDolR4rTkVYxdRPuQTS3jVGojc7VgxIpoFDncJePvQBv_3IN7afYvwDqNghBADi_fo1T4EgkeApFk4Suc_H_mwsWbpo_PXojl9kTU2unbJ_LInSNMcwFuycFhtbChC7hFD68c1fNv9bWG82kFX62-YE6TFu" }
+                        ].map((course, i) => (
+                            <Link key={i} to="/course-overview" class="bg-white dark:bg-slate-800 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all group flex flex-col block cursor-pointer border border-slate-100 dark:border-slate-700">
+                                <div class="relative h-40 sm:h-48 w-full overflow-hidden">
+                                    <div class="absolute bottom-4 left-4 z-20 flex flex-wrap gap-2">
+                                        <span class="bg-primary text-white text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded shadow-lg">{course.tag}</span>
+                                    </div>
+                                    <img src={course.img} class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                </div>
+                                <div class="p-4 sm:p-6 flex-1 flex flex-col">
+                                    <div class="flex justify-between items-start gap-2 mb-1">
+                                        <h3 class="text-base sm:text-lg font-bold group-hover:text-primary transition-colors line-clamp-2 leading-tight flex-1">{course.title}</h3>
+                                        {course.price && <span class="text-primary font-bold text-sm sm:text-base whitespace-nowrap">{course.price}</span>}
+                                    </div>
+                                    <p class="text-xs text-slate-500 mb-4 flex items-center gap-1.5">
+                                        <span class="material-symbols-outlined text-sm">person</span>
+                                        {course.instructor}
+                                    </p>
+                                    <div class="mt-auto space-y-3">
+                                        <div class="flex items-center justify-between text-[10px] sm:text-xs font-bold">
+                                            <span class="text-slate-400"></span><span class="text-primary">{course.progress}% complete</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                                            <div class="bg-primary h-full rounded-full transition-all duration-1000" style={{ width: `${course.progress}%` }}></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+
+
+        const ProgramsPage = ({ onMenuClick }) => (
+            <div class="flex-1 overflow-y-auto custom-scrollbar relative z-0">
+                <Header title="My Programs" subtitle="Track your learning progress" onMenuClick={onMenuClick} />
+                <div class="p-4 sm:p-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-xl transition-all group">
+                            <div class="h-24 sm:h-32 bg-primary/10 relative">
+                                <div class="absolute bottom-4 left-4 sm:left-6 flex items-center gap-3">
+                                    <div class="size-10 sm:size-12 rounded-lg bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center text-primary">
+                                        <span class="material-symbols-outlined text-2xl sm:text-3xl">terminal</span>
+                                    </div>
+                                    <span class="bg-primary text-white text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded">Core Program</span>
+                                </div>
+                            </div>
+                            <div class="p-4 sm:p-6">
+                                <h3 class="text-lg sm:text-xl font-bold mb-4 group-hover:text-primary transition-colors">Advanced Software Engineering</h3>
+                                <div class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full mb-6 overflow-hidden">
+                                    <div class="bg-primary h-full rounded-full w-[78%]"></div>
+                                </div>
+                                <div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+                                    <span class="text-xs sm:text-sm font-bold text-primary">78% Complete</span>
+                                    <Link to="/courses" class="bg-primary hover:bg-primary/90 text-white font-bold py-2 px-4 sm:px-6 rounded-lg text-xs sm:text-sm transition-all text-center">CONTINUE</Link>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white/50 dark:bg-slate-900/50 rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center p-8 sm:p-12 text-center group cursor-pointer hover:border-primary/50 transition-all min-h-[200px]">
+                            <div class="size-12 sm:size-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-primary transition-all mb-4">
+                                <span class="material-symbols-outlined text-3xl sm:text-4xl">add</span>
+                            </div>
+                            <h3 class="text-base sm:text-lg font-bold text-slate-600 dark:text-slate-300">Add New Program</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const ClassesPage = ({ onMenuClick }) => (
+            <div class="flex-1 overflow-y-auto custom-scrollbar relative z-0">
+                <Header title="My Classes" subtitle="Your academic schedule for today, Oct 24th." onMenuClick={onMenuClick} />
+                <div class="p-4 sm:p-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4 sm:mt-8">
+                        <div class="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col group hover:shadow-md transition-shadow">
+                            <div class="h-32 sm:h-40 bg-slate-100 relative overflow-hidden">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
+                                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRQmwK1D6a2vylyx6AiT-v2XPEicOlEvdRfdkfRSgLFIP82N-k9jHCxXrTwExFEus3dABow0jhWK7rfppu3_6iCTf_scUuPde5pdct1YQfXSgh2pDwHQuaw3vN2JLbisZmFl3KzFxYPOkQK-VL1FNRGCZCefHxd0wYCWsgmaa0l1vSbfBIC9RDDViigkIG3mN7IkZWdaOrpAcIRSIwUs6VFH0tM1bIqUmoJeaS41YVmWreZ_yHCY6r6bTdFOVH2_gSF4WX7OZh1TRX" class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                                <div class="absolute top-4 left-4 z-20">
+                                    <span class="bg-red-500 text-white text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg flex items-center gap-1">
+                                        <span class="size-1.5 bg-white rounded-full animate-pulse"></span> Live Now
+                                    </span>
+                                </div>
+                                <div class="absolute bottom-4 left-4 z-20">
+                                    <h3 class="text-white text-lg sm:text-xl font-bold">Advanced Mathematics</h3>
+                                </div>
+                            </div>
+                            <div class="p-4 sm:p-5 flex flex-col gap-4">
+                                <div class="flex items-center justify-between py-2 sm:py-3 border-y border-slate-100 dark:border-slate-800">
+                                    <span class="text-xs sm:text-sm font-medium">10:00 AM - 11:30 AM</span>
+                                    <span class="text-primary text-[10px] sm:text-xs font-bold bg-primary/10 px-2 py-1 rounded">Online</span>
+                                </div>
+                                <button class="w-full py-2.5 sm:py-3 bg-primary text-white rounded-lg font-bold flex items-center justify-center gap-2 text-sm sm:text-base">Join Session</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const NotificationsPage = ({ onMenuClick }) => (
+            <div class="flex-1 overflow-y-auto custom-scrollbar relative z-0">
+                <Header title="Notifications" subtitle="Stay updated with your learning activities" onMenuClick={onMenuClick} />
+                <div class="p-4 sm:p-8 max-w-4xl mx-auto space-y-4">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+                        <div class="flex gap-4 border-b border-slate-200 dark:border-slate-800 w-full sm:w-auto overflow-x-auto scrollbar-hide flex-1">
+                            <button class="pb-3 border-b-2 border-primary text-primary font-bold text-sm whitespace-nowrap">All</button>
+                            <button class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm whitespace-nowrap">Unread</button>
+                            <button class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm whitespace-nowrap">Announcements</button>
+                        </div>
+                        <button class="text-sm font-medium text-primary hover:text-primary/80 transition-colors whitespace-nowrap flex items-center gap-1">
+                            <span class="material-symbols-outlined text-sm">done_all</span> Mark as Read
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        {[
+                            { title: "New Assignment Graded", time: "2 hours ago", desc: "Your submission for Advanced Math has been graded. You scored 92/100.", type: "grade", read: false },
+                            { title: "Upcoming Live Class", time: "5 hours ago", desc: "Reminder: Visual Design Workshop starts in 30 minutes.", type: "class", read: false },
+                            { title: "Course Material Updated", time: "1 day ago", desc: "New resources have been added to Module 3: Visual Design Principles.", type: "update", read: true },
+                            { title: "Achievement Unlocked!", time: "2 days ago", desc: "Congratulations! You've completed a 7-day learning streak.", type: "achievement", read: true }
+                        ].map((notif, i) => (
+                            <div key={i} class={`p-4 rounded-lg border ${notif.read ? 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800' : 'bg-primary/5 border-primary/20'} flex gap-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer`}>
+                                <div class={`size-10 rounded-full flex items-center justify-center shrink-0 ${notif.type === 'grade' ? 'bg-green-100 text-green-600' : notif.type === 'class' ? 'bg-blue-100 text-blue-600' : notif.type === 'achievement' ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-600'}`}>
+                                    <span class="material-symbols-outlined text-xl">
+                                        {notif.type === 'grade' ? 'fact_check' : notif.type === 'class' ? 'videocam' : notif.type === 'achievement' ? 'emoji_events' : 'article'}
+                                    </span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-start justify-between gap-2 mb-1">
+                                        <h4 class={`font-semibold text-sm sm:text-base ${notif.read ? 'text-slate-700 dark:text-slate-300' : 'text-slate-900 dark:text-white'}`}>{notif.title}</h4>
+                                        <span class="text-xs text-slate-500 whitespace-nowrap">{notif.time}</span>
+                                    </div>
+                                    <p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">{notif.desc}</p>
+                                </div>
+                                {!notif.read && <div class="w-2 h-2 rounded-full bg-primary shrink-0 mt-2"></div>}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+
+        const ProfilePage = ({ onMenuClick }) => {
+            const [activeTab, setActiveTab] = useState("About");
+            const tabs = ["About", "Certificates", "Learning", "Teaching", "Settings", "Slots", "Schedule"];
+
+            return (
+                <div class="flex-1 overflow-y-auto custom-scrollbar relative z-0">
+                    <Header title="Profile" subtitle="Manage your account" onMenuClick={onMenuClick} />
+                    <div class="h-32 sm:h-48 bg-primary/20 relative">
+                        <div class="absolute -bottom-12 sm:-bottom-16 left-4 sm:left-8 flex items-end gap-4 sm:gap-6">
+                            <div class="size-24 sm:size-32 rounded-full border-4 border-background-light dark:border-background-dark bg-slate-200" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAwhhf7efEdSKrfCPnnA3Ol8gDD7MdAFH1625R0dfxjQJbEmkxanTISHmd2MjQ05LOr59kb4fAmroE1Pcxz3wQYGUK4af_P3-88b5_bn4T7XiaYTCY54_zS7ewJdsdyIsUY5I8Xz6NDtvCIKJpFRdm8SJO9_H5vYCBXjWgt6hcKTprW-dnHE7q3gLZ_Y0FREDRmJNx_5CrCplUnFqu1fB5hwmsueSZHlFqKXXjAYMlncckbXipVSVP-U8l-oQXT3NFd94mOWMxDx0v1')", backgroundSize: 'cover' }}></div>
+                            <div class="mb-2 sm:mb-4">
+                                <h1 class="text-xl sm:text-3xl font-bold">Alex Johnson</h1>
+                                <p class="text-xs sm:text-base text-slate-500 font-medium">Premium Student</p>
+                            </div>
+                        </div>
+                        <div class="absolute bottom-4 right-4 sm:right-8">
+                            <button class="bg-primary text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-primary/90 transition-colors shadow-sm text-xs sm:text-sm">
+                                <span class="material-symbols-outlined text-xs sm:text-sm">edit</span> Edit Profile
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-16 sm:mt-24 px-4 sm:px-8 pb-8">
+                        <div class="flex gap-4 sm:gap-6 border-b border-slate-200 dark:border-slate-800 mb-6 sm:mb-8 overflow-x-auto scrollbar-hide">
+                            {tabs.map(tab => (
+                                <button 
+                                    key={tab}
+                                    onClick={() => setActiveTab(tab)}
+                                    class={`pb-3 sm:pb-4 border-b-2 font-bold text-xs sm:text-sm whitespace-nowrap transition-all ${
+                                        activeTab === tab ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                                    }`}
+                                >
+                                    {tab}
+                                </button>
+                            ))}
+                        </div>
+                        <div class="bg-white dark:bg-slate-900 rounded-lg p-6 sm:p-8 border border-slate-100 dark:border-slate-800 shadow-sm min-h-[200px] sm:min-h-[300px]">
+                            {activeTab === "About" && (
+                                <div class="space-y-4">
+                                    <h3 class="text-lg sm:text-xl font-bold">About Me</h3>
+                                    <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed max-w-3xl">
+                                        Passionate learner with a focus on UI/UX design and frontend development. Currently mastering motion design and interactive prototyping. Always looking to collaborate on exciting projects and expand my skill set.
+                                    </p>
+                                    <div class="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-4 sm:mt-6">
+                                        <div class="flex items-center gap-2 text-sm sm:text-base text-slate-500">
+                                            <span class="material-symbols-outlined text-lg">location_on</span> San Francisco, CA
+                                        </div>
+                                        <div class="flex items-center gap-2 text-sm sm:text-base text-slate-500">
+                                            <span class="material-symbols-outlined text-lg">email</span> alex.j@example.com
+                                        </div>
+                                        <div class="flex items-center gap-2 text-sm sm:text-base text-slate-500">
+                                            <span class="material-symbols-outlined text-lg">link</span> portfolio.com
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            {activeTab !== "About" && (
+                                <div class="flex items-center justify-center h-full text-slate-400 py-8 sm:py-12 text-sm sm:text-base">
+                                    <p>{activeTab} content goes here...</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Main App ---
+
+        const App = () => {
+            const [darkMode, setDarkMode] = useState(true);
+            const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+            useEffect(() => {
+                if (darkMode) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }, [darkMode]);
+
+            return (
+                <MemoryRouter>
+                    <div class="flex h-screen overflow-hidden bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+                        <Sidebar isOpen={isMobileMenuOpen} setIsOpen={setIsMobileMenuOpen} />
+                        <main class="flex-1 flex flex-col h-full overflow-hidden relative w-full">
+                            {/* Theme Toggle Button */}
+                            <button 
+                                onClick={() => setDarkMode(!darkMode)}
+                                class="fixed bottom-6 right-6 size-10 sm:size-12 rounded-full bg-white dark:bg-slate-800 shadow-xl border border-slate-200 dark:border-slate-700 flex items-center justify-center z-50 text-slate-600 dark:text-slate-400 hover:scale-110 transition-transform"
+                            >
+                                <span class="material-symbols-outlined text-lg sm:text-xl">
+                                    {darkMode ? 'light_mode' : 'dark_mode'}
+                                </span>
+                            </button>
+
+                            <div className="flex-1 overflow-hidden relative z-0 flex flex-col">
+                                <Routes>
+                                    <Route path="/" element={<DashboardPage onMenuClick={() => setIsMobileMenuOpen(true)} />} />
+                                    <Route path="/batch" element={<BatchPage onMenuClick={() => setIsMobileMenuOpen(true)} />} />
+                                    <Route path="/course-overview" element={<CourseOverviewPage onMenuClick={() => setIsMobileMenuOpen(true)} />} />
+                                    <Route path="/lesson" element={<LessonPlayerPage onMenuClick={() => setIsMobileMenuOpen(true)} />} />
+                                    <Route path="/courses" element={<AllCoursesPage onMenuClick={() => setIsMobileMenuOpen(true)} />} />
+                                    <Route path="/programs" element={<ProgramsPage onMenuClick={() => setIsMobileMenuOpen(true)} />} />
+                                    <Route path="/classes" element={<ClassesPage onMenuClick={() => setIsMobileMenuOpen(true)} />} />
+                                    <Route path="/profile" element={<ProfilePage onMenuClick={() => setIsMobileMenuOpen(true)} />} />
+                                    <Route path="/notifications" element={<NotificationsPage onMenuClick={() => setIsMobileMenuOpen(true)} />} />
+                                </Routes>
+                            </div>
+                        </main>
+                    </div>
+                </MemoryRouter>
+            );
+        };
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
